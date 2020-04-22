@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.5.0;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -27,6 +27,10 @@ contract FlightSuretyData {
                                 public 
     {
         contractOwner = msg.sender;
+
+        airline[contractOwner] = Airline(contractOwner,"First Airline", AirlineState.paid, 0);
+
+        // contract is operational then there should be one airline already added 
     }
 
     /********************************************************************************************/
@@ -88,9 +92,11 @@ contract FlightSuretyData {
     {
         operational = mode;
     }
-
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
+    /********************************************************************************************/
+   /********************************************************************************************/
+    /*                                     Airline FUNCTIONS                                   */
     /********************************************************************************************/
 
    /**
@@ -98,14 +104,78 @@ contract FlightSuretyData {
     *      Can only be called from FlightSuretyApp contract
     *
     */   
+ event Airlinetesting(string data);
+
+    enum AirlineState{
+        unregistered, //0
+        registered, //1
+        paid       //2
+    }
+    uint airlinestate;
+    struct Airline{
+        address airlineID;
+        string airlineName;
+        AirlineState airlineState;
+        mapping(address => bool) approvers;
+        uint approverCount;
+    }
+
+    //mapping(address => unit) 
+    uint internal PaidAirlines = 1;
+
+    mapping(address => Airline) internal airline;
+
+    function createAirline(address airlineID, uint8 state, string calldata name) external{
+    
+            airline[airlineID] = Airline(airlineID, name, AirlineState(state), 0);
+    }
+
+    function getAirlineStatus(address airlineID) external view returns(AirlineState){
+
+        return airline[airlineID].airlineState;
+
+    }
+
+    function updateAirlineState(address airlineID, uint8 state) external{
+
+        airline[airlineID].airlineState = AirlineState(state);
+        if(state==2)
+             PaidAirlines++;
+
+    }
+
+    function getPaidAirlines() external returns(uint){
+
+        return PaidAirlines;
+    }
+
+
+    function approveAirlineRegistration(address airlineID, address approver) external returns(uint){
+
+        require(!airline[airlineID].approvers[approver], "Approver already approved the airline");
+
+        airline[airlineID].approvers[approver] = true;
+
+        airline[airlineID].approverCount++;
+
+        return airline[airlineID].approverCount;
+
+    }
     function registerAirline
-                            (   
+                            (   address airline
                             )
                             external
                             pure
     {
+
     }
 
+
+
+
+   /********************************************************************************************/
+    /*                                     Airline  FUNCTIONS                                  */
+    /********************************************************************************************/
 
    /**
     * @dev Buy insurance for a flight

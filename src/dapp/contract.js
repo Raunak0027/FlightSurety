@@ -1,12 +1,13 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import Config from './config.json';
-import Web3 from 'web3';
+import Web3 from '../../node_modules/web3-core';
+
 
 export default class Contract {
     constructor(network, callback) {
 
         let config = Config[network];
-        this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
+        this.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
         this.initialize(callback);
         this.owner = null;
@@ -53,4 +54,15 @@ export default class Contract {
                 callback(error, payload);
             });
     }
+
+    createAirline(airlineid, airlinename, callback){
+        let self = this;
+        self.flightSuretyApp.methods
+        .createAirline(airlineid, airlinename)
+        .call({from: self.owner}, (error, result)=>{
+                callback(error, payload);
+        });
+    }
+
+
 }

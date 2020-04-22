@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.5.0;
 
 // It's important to avoid vulnerabilities due to numeric overflow bugs
 // OpenZeppelin's SafeMath library, when used correctly, protects agains such bugs
@@ -15,7 +15,7 @@ contract FlightSuretyApp {
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
-
+    
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
     uint8 private constant STATUS_CODE_ON_TIME = 10;
@@ -29,11 +29,14 @@ contract FlightSuretyApp {
     struct Flight {
         bool isRegistered;
         uint8 statusCode;
-        uint256 updatedTimestamp;        
+        uint256 updatedTimestamp;
         address airline;
     }
     mapping(bytes32 => Flight) private flights;
 
+
+    address flightdataaddress;
+    FlightSuretyData flightsuretydata;
  
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -63,6 +66,10 @@ contract FlightSuretyApp {
         _;
     }
 
+    function _make_payable(address x) internal pure returns (address payable) {
+        return address(uint160(x));
+    }
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -73,9 +80,12 @@ contract FlightSuretyApp {
     */
     constructor
                                 (
+                                    address datacontractaddress
                                 ) 
                                 public 
     {
+        flightdataaddress = datacontractaddress;
+        flightsuretydata = FlightSuretyData(datacontractaddress);
         contractOwner = msg.sender;
     }
 
@@ -96,10 +106,63 @@ contract FlightSuretyApp {
     /********************************************************************************************/
 
   
+    /********************************************************************************************/
+    /*                                     Airline FUNCTIONS                                     */
+    /********************************************************************************************/
+
+    event AirlineApplied(address airline);
+    event AirlineRegistered(address airline);
+    event AirlinePaid(address airline);
+
+    event Airlinetest(uint8 value);
+    uint constant votes = 4;
    /**
     * @dev Add an airline to the registration queue
     *
     */   
+
+    // function register airline 
+    //paid airline 
+    //appliedairline -- unregistered airline
+
+    function createAirline(address airlineID, string calldata name ) external{  
+
+        flightsuretydata.createAirline(airlineID, 0, name);
+        emit AirlineApplied(airlineID);
+
+    }
+
+    function AirlineRegisteration(address airlineID) external{ // function can only be called by paidairlines
+
+
+        uint paidairlines = flightsuretydata.getPaidAirlines();
+        bool approval = false;
+        if(paidairlines <= votes){
+                approval = true;
+        }
+        else{
+           uint approvers = flightsuretydata.approveAirlineRegistration(airlineID, msg.sender);
+           if(approvers >= (paidairlines/2)){
+               approval = true;
+           }
+        }
+        if(approval){
+            flightsuretydata.updateAirlineState(airlineID, 1);
+            emit AirlineRegistered(airlineID);
+        }
+    
+    }
+
+    
+
+    function AirlinePayment() external payable{   //function that can be only called by registered airlines
+        
+        address payable flighdataaddresspayable = _make_payable(flightdataaddress);
+        flighdataaddresspayable.transfer(msg.value);
+        flightsuretydata.updateAirlineState(msg.sender, 2);
+    }
+
+
     function registerAirline
                             (   
                             )
@@ -110,6 +173,13 @@ contract FlightSuretyApp {
         return (success, 0);
     }
 
+    /********************************************************************************************/
+    /*                                     Airline FUNCTIONS                             */
+    /********************************************************************************************/
+
+    /********************************************************************************************/
+        /*                                     FLIGHT FUNCTIONS                             */
+    /********************************************************************************************/
 
    /**
     * @dev Register a future flight for insuring.
@@ -145,8 +215,8 @@ contract FlightSuretyApp {
     function fetchFlightStatus
                         (
                             address airline,
-                            string flight,
-                            uint256 timestamp                            
+                            string calldata flight,
+                            uint256 timestamp
                         )
                         external
     {
@@ -230,7 +300,7 @@ contract FlightSuretyApp {
                             )
                             view
                             external
-                            returns(uint8[3])
+                            returns(uint8[3] memory )
     {
         require(oracles[msg.sender].isRegistered, "Not registered as an oracle");
 
@@ -248,7 +318,7 @@ contract FlightSuretyApp {
                         (
                             uint8 index,
                             address airline,
-                            string flight,
+                            string calldata flight,
                             uint256 timestamp,
                             uint8 statusCode
                         )
@@ -278,7 +348,7 @@ contract FlightSuretyApp {
     function getFlightKey
                         (
                             address airline,
-                            string flight,
+                            string memory flight,
                             uint256 timestamp
                         )
                         pure
@@ -294,7 +364,7 @@ contract FlightSuretyApp {
                                 address account         
                             )
                             internal
-                            returns(uint8[3])
+                            returns(uint8[3] memory)
     {
         uint8[3] memory indexes;
         indexes[0] = getRandomIndex(account);
@@ -335,3 +405,14 @@ contract FlightSuretyApp {
 // endregion
 
 }   
+
+contract FlightSuretyData{
+
+    function updateAirlineState(address airlineID, uint8 state) external;
+    function createAirline(address airlineID, uint8 state, string calldata name) external;
+    function getPaidAirlines() external returns(uint);
+    function approveAirlineRegistration(address airlineID, address approver) external returns(uint);
+    
+}
+
+
