@@ -30,7 +30,8 @@ contract('Flight Surety Tests', async (accounts) => {
    // let tx = await config.flightSuretyApp.createAirline(airline1, 'firstairline');
   //  let event = tx.logs[0].event;
   //  console.log(event);
-    
+    console.log("account number one "+accounts[1]);  
+
     let statusvalue = await config.flightSuretyData.getAirlineStatus(airline1);
     console.log("Owner airline by default value "+statusvalue);
 

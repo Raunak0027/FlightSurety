@@ -1,14 +1,16 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 import Config from './config.json';
-import Web3 from '../../node_modules/web3-core';
+import Web3 from 'web3';
 
 
 export default class Contract {
     constructor(network, callback) {
 
         let config = Config[network];
-        this.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
+        this.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545'));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
+        this.flightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.initialize(callback);
         this.owner = null;
         this.airlines = [];
@@ -19,6 +21,7 @@ export default class Contract {
         this.web3.eth.getAccounts((error, accts) => {
            
             this.owner = accts[0];
+            console.log("this is the owner"+this.owner);
 
             let counter = 1;
             
@@ -55,14 +58,20 @@ export default class Contract {
             });
     }
 
-    createAirline(airlineid, airlinename, callback){
+    getAirlineStatus(airlineid){
+        let self = this;
+        self.flightSuretyData.methods
+        .getAirlineStatus(airlineid);
+    }
+
+    createAirline(airlineid, airlinename){
         let self = this;
         self.flightSuretyApp.methods
         .createAirline(airlineid, airlinename)
-        .call({from: self.owner}, (error, result)=>{
-                callback(error, payload);
-        });
+       // .call({from: self.owner}) //(error, result)=>{
+        console.log("Airline status of the recent airline created"+ self.getAirlineStatus(airlineid));
+     //           callback(error);
+     //   });
     }
-
 
 }
