@@ -25,10 +25,9 @@ import './flightsurety.css';
         let airlineid = DOM.elid('airlineid').value;
         let airlinename = DOM.elid('airlinename').value;
         // Write transaction
-        contract.createAirline(airlineid, airlinename, (error,result)=>{
-
-            console.log(error, result);
-        });//, (error, result) => {
+        contract.createAirline(airlineid, airlinename, (error)=>{
+            console.log("airline not added to "+ error);
+        });
            // display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
        // });
         console.log("Airline created");

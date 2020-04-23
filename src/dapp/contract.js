@@ -21,7 +21,7 @@ export default class Contract {
         this.web3.eth.getAccounts((error, accts) => {
            
             this.owner = accts[0];
-            console.log("this is the owner"+this.owner);
+          //  console.log("this is the owner"+this.owner);
 
             let counter = 1;
             
@@ -58,18 +58,22 @@ export default class Contract {
             });
     }
 
-    getAirlineStatus(airlineid){
+    getAirlineStatus(airlineid, callback){
         let self = this;
         self.flightSuretyData.methods
-        .getAirlineStatus(airlineid);
+        .getAirlineStatus(airlineid).call({from: self.owner}, (error)=>{
+            callback(error);
+        });
     }
 
-    createAirline(airlineid, airlinename){
+    createAirline(airlineid, airlinename, callback){
         let self = this;
         self.flightSuretyApp.methods
         .createAirline(airlineid, airlinename)
-       // .call({from: self.owner}) //(error, result)=>{
-        console.log("Airline status of the recent airline created"+ self.getAirlineStatus(airlineid));
+        .call({from: self.owner} , (error)=>{
+            callback(error);
+        });
+        console.log("Airline status of the recent airline created"+ self.getAirlineStatus(airlineid, callback));
      //           callback(error);
      //   });
     }
