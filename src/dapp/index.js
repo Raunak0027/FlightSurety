@@ -31,17 +31,17 @@ import './flightsurety.css';
         console.log("Airline created");
     })
 
-    DOM.elid('submit-flight').addEventListener('click', () => {
+     DOM.elid('submit-flight').addEventListener('click', async() => {
         let flightname = DOM.elid('flightname').value;
         let flighttime = DOM.elid('flighttime').value;
         // Write transaction
-         contract.registerFlight(0, flightname, flighttime, (error)=>{
-            console.log(`Flight not registered ${error}`);
+         await contract.registerFlight(0, flightname, flighttime, (error) => {
+            console.log(`Flight not registered error: ${error}`);
         });
         
-        //contract.getFlights();
+          await contract.getFlights();
        // console.log("Size of flights "+ flight.length);
-        console.log("Flight registered");
+       console.log("Flight count should be mentioned now");
     })
 
 

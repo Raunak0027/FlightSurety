@@ -72,7 +72,7 @@ export default class Contract {
                 .getAirlineStatus(
                     airlineid
                 ).call({"from": self.owner}, (error, airlineStatus) => {
-                    console.log(`worked when returning flight status`);
+                    //console.log(`worked when returning flight status`);
                     return error ? reject(error) : resolve(airlineStatus)
                 }
             );
@@ -99,23 +99,25 @@ export default class Contract {
     }
         //FLIGHT FUNCTIONS
 
-        registerFlight(statuscode, flightnumber, flighttime, callback){
+       async registerFlight(statuscode, flightnumber, flighttime, callback){
             let self = this;
-            self.flightSuretyApp.methods
+          await self.flightSuretyApp.methods
             .registerFlight(statuscode, flightnumber, flighttime)
-            .send({from: self.owner}, async (error) => {
-               await self.getFlightCount().then((flightcount) => {
-                    console.log(`flight registered ${flightcount}`);
-                    callback();
-                }).catch((err)=>{
-                    callback(err);
-                });
-                
-               
+            .send({from: self.owner}, (error) => {
+                    callback(error);
             });
+
+           /* await self.getFlightCount().then((flightcount) => {
+                console.log(`flight registered ${flightcount}`);
+                callback();
+            }).catch((err)=>{
+                callback(err);
+            }); */
+            
         };
 
         getFlightCount(){
+            let self = this;
             return new Promise((resolve,reject) => {
                self.flightSuretyApp.methods
                 .getFlightCount()
@@ -129,10 +131,9 @@ export default class Contract {
            
         }
     
-            getFlights(){
+      async getFlights(){
             let self = this;
-            self.getFlightCount().then((flightcount) => {console.log(flightcount)});
-            //console.log("it is here2"+ flight);
+             await  self.getFlightCount().then((flightcount) => {console.log("This is the flight count"+flightcount)});
             
         }
 

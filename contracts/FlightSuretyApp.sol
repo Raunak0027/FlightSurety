@@ -258,7 +258,7 @@ contract FlightSuretyApp {
 
     }
 
-    function getFlightCount() external view returns(uint256 flightcount){
+    function getFlightCount() external view returns(uint256){
         return flightsKeyList.length;
     }
 
