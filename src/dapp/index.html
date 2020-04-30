@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>FlightSurety</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
@@ -25,9 +28,6 @@
         <div class="row top-20">
             <label class="form">Flight</label> <input type="text" id="flight-number"> <btn class="btn btn-primary" id="submit-oracle">Submit to Oracles</btn>
         </div>
-    </main>
-
-    <main class="container">
 
         <div id="display-wrapper" class="top-20">
         </div>
@@ -37,9 +37,40 @@
             <input type="text" id="airlinename" placeholder="give airline name here"> 
             <btn class="btn btn-primary" id="submit-airline">submit airline</btn>
         
-        </div>
-    </main>
+        </div>  
 
+        <div id="display-wrapper" class="top-20">
+        </div>
+        <div class="row top-20">
+            <label class="form">Flight</label> 
+            <input type="text" id="flightname"> 
+            <input type="text" id="flighttime" placeholder="Enter the flight time"> 
+            <btn class="btn btn-primary" id="submit-flight">submit Flight</btn>
+        
+        </div>
+
+        <!-- drop down for the flights-->
+        <div class="dropdown-menu">
+
+            <a class="dropdown-item" href="#">Tablet</a>
+            <a class="dropdown-item" href="#">Smartphone</a>
+            <ul id= "dropdown">
+            </ul>
+            <btn class="btn btn-primary" id="submit-flight">submit Flight</btn>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Dropdown button
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li class="dropdown-item" href="#">Action</li>
+              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="#">Something else here</a>
+            </div>
+          </div>
+
+    </main>
 </body>
 
 </html>

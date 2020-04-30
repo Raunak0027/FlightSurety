@@ -58,24 +58,93 @@ export default class Contract {
             });
     }
 
-    getAirlineStatus(airlineid, callback){
+    // getAirlineStatus(airlineid, callback){
+    //     let self = this;
+    //     self.flightSuretyData.methods
+    //     .getAirlineStatus(airlineid).call({from: self.owner}, (error)=>{
+    //         callback(error);
+    //     });
+    // }
+    getAirlineStatus(airlineid){
         let self = this;
-        self.flightSuretyData.methods
-        .getAirlineStatus(airlineid).call({from: self.owner}, (error)=>{
-            callback(error);
+        return new Promise((resolve, reject) => {
+            self.flightSuretyData.methods
+                .getAirlineStatus(
+                    airlineid
+                ).call({"from": self.owner}, (error, airlineStatus) => {
+                    console.log(`worked when returning flight status`);
+                    return error ? reject(error) : resolve(airlineStatus)
+                }
+            );
         });
     }
+
+
 
     createAirline(airlineid, airlinename, callback){
         let self = this;
         self.flightSuretyApp.methods
         .createAirline(airlineid, airlinename)
-        .call({from: self.owner} , (error)=>{
-            callback(error);
+        .send({from: self.owner} , (error)=>{
+            self.getAirlineStatus(
+                airlineid
+            ).then((airlineStatus) => {
+                console.log(`Airline status of the recent airline created: ${airlineStatus}`);
+                callback();
+            }).catch(err => {
+                callback(err);
+            });
         });
-        console.log("Airline status of the recent airline created"+ self.getAirlineStatus(airlineid, callback));
-     //           callback(error);
-     //   });
+
     }
+        //FLIGHT FUNCTIONS
+
+        registerFlight(statuscode, flightnumber, flighttime, callback){
+            let self = this;
+            self.flightSuretyApp.methods
+            .registerFlight(statuscode, flightnumber, flighttime)
+            .send({from: self.owner}, async (error) => {
+               await self.getFlightCount().then((flightcount) => {
+                    console.log(`flight registered ${flightcount}`);
+                    callback();
+                }).catch((err)=>{
+                    callback(err);
+                });
+                
+               
+            });
+        };
+
+        getFlightCount(){
+            return new Promise((resolve,reject) => {
+               self.flightSuretyApp.methods
+                .getFlightCount()
+                .call({"from": self.owner}, (error, flightcount) => {
+                            console.log(`Flight count ${flightcount}`)
+                            return error ? reject(error) : resolve(flightcount);
+                        }
+                    
+                    );
+               });
+           
+        }
+    
+            getFlights(){
+            let self = this;
+            self.getFlightCount().then((flightcount) => {console.log(flightcount)});
+            //console.log("it is here2"+ flight);
+            
+        }
+
+        // then((flightcount) =>{
+        //     const flight = [];
+        //     console.log("it is here");
+        //     for(var i = 0; i<flightcount; i++){
+        //         const res = self.flightSuretyApp.methods
+        //                     .getFlight(i);
+        //         flight.push(res);
+        //     }
+        //     return flight;
+        //     });
 
 }

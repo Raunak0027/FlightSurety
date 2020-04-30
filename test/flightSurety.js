@@ -1,6 +1,6 @@
-
 var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
+const truffleAssert = require('truffle-assertions');
 let airline1;
 let airline2;
 let airline3;
@@ -177,6 +177,26 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
 
   });
+
+
+  it('Passenger can check status of flight', async function () {
+
+    const flight1 = await config.flightSuretyApp.getFlight(0);
+    
+    const fetchFlightStatus = await config.flightSuretyApp.fetchFlightStatus(
+        flight1.airline,
+        flight1.flightname,
+        flight1.timestamp,
+    );
+    //console.log("this is flight1 "+ flight1.statuscode);
+
+    truffleAssert.eventEmitted(fetchFlightStatus, 'OracleRequest', (ev) => {
+        return ev.airline === flight1.airline;
+    });
+
+
+    
+});
  
 
 });

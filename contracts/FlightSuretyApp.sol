@@ -16,28 +16,7 @@ contract FlightSuretyApp {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
     
-    // Flight status codees
-    uint8 private constant STATUS_CODE_UNKNOWN = 0;
-    uint8 private constant STATUS_CODE_ON_TIME = 10;
-    uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
-    uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
-    uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
-    uint8 private constant STATUS_CODE_LATE_OTHER = 50;
-
-    address private contractOwner;          // Account used to deploy contract
-
-    struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
-        address airline;
-    }
-    mapping(bytes32 => Flight) private flights;
-
-
-    address flightdataaddress;
-    FlightSuretyData flightsuretydata;
- 
+  
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
@@ -87,6 +66,26 @@ contract FlightSuretyApp {
         flightdataaddress = datacontractaddress;
         flightsuretydata = FlightSuretyData(datacontractaddress);
         contractOwner = msg.sender;
+        
+
+
+        //address payable flightdataaddresspayable = _make_payable(flightdataaddress);
+
+        //create random flights
+
+    
+        bytes32 flightKey1 = getFlightKey(contractOwner, "FLIGHT1", 1588019095);
+        flights[flightKey1] = Flight(contractOwner, "FLIGHT1",STATUS_CODE_UNKNOWN, 1588019095);
+        //flights[flightKey1] = Flight(STATUS_CODE_UNKNOWN, now, , "FLIGHT1");
+        flightsKeyList.push(flightKey1);
+
+        bytes32 flightKey2 = getFlightKey(contractOwner, "FLIGHT2", now + 1 days);
+        flights[flightKey2] = Flight(contractOwner, "FLIGHT2",STATUS_CODE_UNKNOWN, now + 1 days);
+        flightsKeyList.push(flightKey2);
+
+        bytes32 flightKey3 = getFlightKey(contractOwner, "FLIGHT3", now + 2 days);
+        flights[flightKey3] = Flight(contractOwner, "FLIGHT3",STATUS_CODE_UNKNOWN, now + 2 days);
+        flightsKeyList.push(flightKey3);
     }
 
     /********************************************************************************************/
@@ -180,25 +179,58 @@ contract FlightSuretyApp {
     /********************************************************************************************/
         /*                                     FLIGHT FUNCTIONS                             */
     /********************************************************************************************/
+  // Flight status codees
+    uint8 private constant STATUS_CODE_UNKNOWN = 0;
+    uint8 private constant STATUS_CODE_ON_TIME = 10;
+    uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
+    uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
+    uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
+    uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
+    address private contractOwner;          // Account used to deploy contract
+
+    struct Flight {
+       // bool isRegistered;
+        address airline;
+        string flightnumber;
+        uint8 statusCode;
+        uint256 updatedTimestamp;
+        
+    }
+    mapping(bytes32 => Flight) private flights;
+    bytes32[] private flightsKeyList;
+
+    event FlightRegistered(address airline, string flightname, uint8 statuscode);
+
+    address flightdataaddress;
+    FlightSuretyData flightsuretydata;
    /**
     * @dev Register a future flight for insuring.
     *
     */  
     function registerFlight
                                 (
+                                    uint8 statusCode, string calldata flightnumber, uint256 flighttime
                                 )
                                 external
-                                pure
+                                
     {
 
+        bytes32 flightkey = getFlightKey(msg.sender, flightnumber, flighttime);
+
+        flights[flightkey] = Flight(msg.sender, flightnumber, statusCode, flighttime);
+        flightsKeyList.push(flightkey);
     }
     
+   // function getFlight(uint flightindex) return airline, timestamp, statuscode, name 
+   
+   
+   //{}
    /**
     * @dev Called after oracle has updated flight status
     *
     */  
-    function processFlightStatus
+    function processFlightStatus  // add status to the flight
                                 (
                                     address airline,
                                     string memory flight,
@@ -206,8 +238,28 @@ contract FlightSuretyApp {
                                     uint8 statusCode
                                 )
                                 internal
-                                pure
+                                
     {
+
+        bytes32 flightkey = getFlightKey(airline, flight, timestamp);
+        flights[flightkey].statusCode = statusCode;
+
+    
+    }
+
+    // Generate the list of flights for which the passenger would want to buy the insurance
+
+    function getFlight(uint256 index) external view returns(address airline, string memory flightname, uint256 timestamp, uint8 statuscode){
+
+        airline = flights[flightsKeyList[index]].airline;
+        flightname = flights[flightsKeyList[index]].flightnumber;
+        timestamp = flights[flightsKeyList[index]].updatedTimestamp;
+        statuscode = flights[flightsKeyList[index]].statusCode;
+
+    }
+
+    function getFlightCount() external view returns(uint256 flightcount){
+        return flightsKeyList.length;
     }
 
 
@@ -229,8 +281,45 @@ contract FlightSuretyApp {
                                                 isOpen: true
                                             });
 
-        emit OracleRequest(index, airline, flight, timestamp);
+        emit OracleRequest(index, airline, flight, timestamp, key);
     } 
+    /********************************************************************************************/
+        /*                                     FLIGHT FUNCTIONS                             */
+    /********************************************************************************************/
+/********************************************************************************************/
+        /*                                     Passenger FUNCTIONS                             */
+    /********************************************************************************************/
+    uint public constant max_insurance_price = 1 ether;
+
+    function purchaseinsurance(address passenger, string calldata flightname) external payable{  // function will be called by the passenger
+
+            require(msg.value <= max_insurance_price, 'maximum that you can purchase is of 1eth');
+            address payable flighdataaddresspayable = _make_payable(flightdataaddress);
+            flighdataaddresspayable.transfer(msg.value);
+            uint256 withdrawamount = msg.value.mul(3);
+            withdrawamount = withdrawamount.div(2);
+            flightsuretydata.createInsurance(flightname, msg.value, withdrawamount, passenger);
+
+    }
+
+    //function getinsurance
+
+    function claimInsurance(address airlineID,address passenger, string calldata flightname, uint256 timestamp) external{
+            
+            bytes32 flightKey = getFlightKey(airlineID, flightname, timestamp);
+            require(flights[flightKey].statusCode == 20, "Flight was not delayed");
+            flightsuretydata.claimInsurance(passenger);
+    }
+
+    function payPassenger(address passenger) external{
+
+        flightsuretydata.payPassenger(passenger);
+    }
+
+
+/********************************************************************************************/
+        /*                                     Passenger FUNCTIONS                             */
+    /********************************************************************************************/
 
 
 // region ORACLE MANAGEMENT
@@ -274,7 +363,7 @@ contract FlightSuretyApp {
     // Event fired when flight status request is submitted
     // Oracles track this and if they have a matching index
     // they fetch data and submit a response
-    event OracleRequest(uint8 index, address airline, string flight, uint256 timestamp);
+    event OracleRequest(uint8 index, address airline, string flight, uint256 timestamp, bytes32 key);
 
 
     // Register an oracle with the contract
@@ -328,13 +417,16 @@ contract FlightSuretyApp {
 
 
         bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp)); 
-        require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
+        //require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
 
         oracleResponses[key].responses[statusCode].push(msg.sender);
+        require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
+
 
         // Information isn't considered verified until at least MIN_RESPONSES
         // oracles respond with the *** same *** information
         emit OracleReport(airline, flight, timestamp, statusCode);
+
         if (oracleResponses[key].responses[statusCode].length >= MIN_RESPONSES) {
 
             emit FlightStatusInfo(airline, flight, timestamp, statusCode);
@@ -344,6 +436,16 @@ contract FlightSuretyApp {
         }
     }
 
+    function getOracleKey(uint8 index, address airline, string calldata flight, uint256 timestamp) external pure returns(bytes32 key) {
+
+            return keccak256(abi.encodePacked(index, airline, flight, timestamp));
+
+    }
+
+    function getoracleresponselength(bytes32 key, uint8 statusCode) external view returns(uint256 number){
+
+        return oracleResponses[key].responses[statusCode].length;
+    }
 
     function getFlightKey
                         (
@@ -412,7 +514,10 @@ contract FlightSuretyData{
     function createAirline(address airlineID, uint8 state, string calldata name) external;
     function getPaidAirlines() external returns(uint);
     function approveAirlineRegistration(address airlineID, address approver) external returns(uint);
-    
+    function createInsurance(string calldata flightname, uint256 amount, uint256 withdrawamount, address passenger) external;
+    function claimInsurance(address passenger) external;
+    function payPassenger(address passenger) external payable;
+
 }
 
 

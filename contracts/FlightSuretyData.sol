@@ -92,6 +92,11 @@ contract FlightSuretyData {
     {
         operational = mode;
     }
+
+
+     function _make_payable(address x) internal pure returns (address payable) {
+        return address(uint160(x));
+    }
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -177,10 +182,45 @@ contract FlightSuretyData {
     /*                                     Airline  FUNCTIONS                                  */
     /********************************************************************************************/
 
-   /**
+  
+    struct Insurance{
+            string flightname;
+            uint256 amount;
+            uint256 withdrawamount;
+            
+    }
+
+    mapping(address => uint256) private passengerbalance;
+    mapping(address => Insurance) passengerinsurance;
+
+    function createInsurance(string calldata flightname, uint256 amount, uint256 withdrawamount, address passenger) external {
+
+        passengerinsurance[passenger] = Insurance(flightname, amount, withdrawamount);
+
+    }
+    function claimInsurance(address passenger) external{
+
+            passengerbalance[passenger] = passengerbalance[passenger] + passengerinsurance[passenger].withdrawamount;
+    }
+
+    function payPassenger(address passenger) external payable{
+        
+        passengerbalance[passenger] = 0;
+        address payable passengeraddresspayable = _make_payable(passenger);
+        passengeraddresspayable.transfer(passengerbalance[passenger]);
+
+    }
+    function getInsurance(address passenger) external view returns(string memory flightname, uint256 amount, uint256 withdrawamount){
+
+        flightname = passengerinsurance[passenger].flightname;
+        amount = passengerinsurance[passenger].amount;
+        withdrawamount = passengerinsurance[passenger].withdrawamount;
+    }
+     /**
     * @dev Buy insurance for a flight
     *
     */   
+
     function buy
                             (                             
                             )
